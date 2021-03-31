@@ -1,11 +1,11 @@
-# Joint LMS API Project
-A joint API project
+# Joint LMS API Project  
+A joint API project  
 
-Written in C# / .Net Core
-Uses Entity Framework and SQL Server
-Unit Testing in Xunit
+Written in C# / .Net Core  
+Uses Entity Framework and SQL Server  
+Unit Testing in Xunit  
 
-Uses the following end points:
+Uses the following end points:  
 
     /api/Account/Login
     /api/Account/change-password
