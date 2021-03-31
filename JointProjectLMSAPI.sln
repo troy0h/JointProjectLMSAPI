@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31112.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JointProjectLMSAPI", "JointProjectLMSAPI.csproj", "{726C5B51-3CBD-4973-A252-DD985A86E1AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{726C5B51-3CBD-4973-A252-DD985A86E1AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{726C5B51-3CBD-4973-A252-DD985A86E1AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{726C5B51-3CBD-4973-A252-DD985A86E1AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{726C5B51-3CBD-4973-A252-DD985A86E1AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2E8BF07-7C51-4E6A-B3CE-4BCB6C9776C1}
+	EndGlobalSection
+EndGlobal
