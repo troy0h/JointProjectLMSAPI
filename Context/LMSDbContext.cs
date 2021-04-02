@@ -12,6 +12,9 @@ namespace JointProjectLMSAPI.Context
     {
         public LMSDbContext(DbContextOptions<LMSDbContext> options) : base()
         {}
+        public LMSDbContext()
+        {}
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             string connString = ConfigurationManager.ConnectionStrings["DB"].ConnectionString;
