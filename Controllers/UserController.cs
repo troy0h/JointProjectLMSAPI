@@ -1,10 +1,13 @@
 ﻿using JointProjectLMSAPI.Context;
 using JointProjectLMSAPI.Models;
+using JointProjectLMSAPI.Helper;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JointProjectLMSAPI.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,73 +17,67 @@ namespace JointProjectLMSAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        // POST Create-Account
-        [HttpPost("Create-Account")]
-        public string CreateAcc(string Rank, string Username, string Email, string Country, string Password)
+        // POST CreateAccount
+        [HttpPost("CreateAccount")]
+        public ActionResult<string> CreateAcc(Role Role, string Username, string Email, string Country, string Password)
         {
-            var user = new User();
-            user.Rank = Rank;
-            user.Username = Username;
-            user.Email = Email;
-            user.Country = Country;
-            string salt = Encrypt.Salt(16);
-            user.PassHash = Encrypt.Sha256(Password + salt);
-            user.PassSalt = salt;
-            user.DateCreated = DateTime.Now;
+            string Salt = Encrypt.Salt(16);
+            var user = new User
+            {
+                Rank = Role.ToString(),
+                Username = Username,
+                Email = Email,
+                Country = Country,
+                PassSalt = Salt,
+                PassHash = Encrypt.Sha256(Password + Salt),
+                DateCreated = DateTime.Now,
+                DateModified = DateTime.Now,
+            };
 
             using (var context = new LMSDbContext())
             {
-                var Name = context.Users
-                                .Where(b => b.Username == user.Username)
-                                .FirstOrDefault();
-                if (Name == null)
+                var isUserInUse = context.Users
+                            .Where(b => b.Username == user.Username || b.Email == user.Email)
+                            .Any();
+
+                if (isUserInUse)
                 {
-                    var Mail = context.Users
-                                .Where(b => b.Email == user.Email)
-                                .FirstOrDefault();
-                    if (Mail == null)
+                    return BadRequest("Username or email in use");
+                }
+
+                var SMTPEmailNotifier = new SMTPEmailNotifier();
+
+                if (Username.Length <= 64 && Username.Length != 0)
+                {
+                    if (Email.Length <= 64 && Email.Length != 0)
                     {
-                        if (Rank == "Admin" || Rank == "Student" || Rank == "Instructor")
+                        if (Country.Length <= 64 && Country.Length != 0)
                         {
-                            if (Username.Length <= 64 && Username.Length != 0)
+                            if (Password.Length <= 64 && Password.Length >= 6 && Password.Any(char.IsUpper))
                             {
-                                if (Email.Length <= 64 && Email.Length != 0)
+                                string specialChar = " !@#$£%^&*~";
+                                foreach (char item in specialChar)
                                 {
-                                    if (Country.Length <= 64 && Country.Length != 0)
+                                    if (Password.Contains(item))
                                     {
-                                        if (Password.Length <= 64 && Password.Length >= 6 && Password.Any(char.IsUpper))
-                                        {
-                                            string specialChar = " !@#$£%^&*~";
-                                            foreach (char item in specialChar)
-                                            {
-                                                if (Password.Contains(item))
-                                                {
-                                                    context.Users.Add(user);
-                                                    context.SaveChanges();
-                                                    Response.StatusCode = 200; return "User accepted";
-                                                }
-                                            }
-                                            Response.StatusCode = 400; return "Password invalid";
-                                        }
-                                        else { Response.StatusCode = 400; return "Password invalid"; }
+                                        context.Users.Add(user);
+                                        context.SaveChanges();
+                                        Task.Run(() => SMTPEmailNotifier.SendEmailAsync(user.Email, "troy0htesting@gmail.com", "Account Confirmation", $"Test Email Confirmation\n{user.Username}"));
+                                        Response.StatusCode = 200; return "User accepted";
                                     }
-                                    else
-                                    { Response.StatusCode = 400; return "Country invalid"; }
                                 }
-                                else
-                                { Response.StatusCode = 400; return "Email invalid"; }
+                                Response.StatusCode = 400; return "Password invalid";
                             }
-                            else
-                            { Response.StatusCode = 400; return "Username invalid"; }
+                            else { Response.StatusCode = 400; return "Password invalid"; }
                         }
                         else
-                        { Response.StatusCode = 400; return "Incorrect Rank"; }
+                        { Response.StatusCode = 400; return "Country invalid"; }
                     }
                     else
-                    { Response.StatusCode = 400; return "Email in use"; }
+                    { Response.StatusCode = 400; return "Email invalid"; }
                 }
                 else
-                { Response.StatusCode = 400; return "Username in use"; }
+                { Response.StatusCode = 400; return "Username invalid"; }
             }
         }
 
