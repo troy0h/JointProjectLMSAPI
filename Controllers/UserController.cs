@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JointProjectLMSAPI.Services;
+using System.ComponentModel.DataAnnotations;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -41,43 +42,38 @@ namespace JointProjectLMSAPI.Controllers
                             .Any();
 
                 if (isUserInUse)
-                {
-                    return BadRequest("Username or email in use");
-                }
+                { return BadRequest("Username or email in use"); }
+
+                if (new EmailAddressAttribute().IsValid(user.Email) && user.Email != null) {}
+                else
+                { return BadRequest("Email is not valid"); }
 
                 var SMTPEmailNotifier = new SMTPEmailNotifier();
 
-                if (Username.Length <= 64 && Username.Length != 0)
+                if (user.Username.Length > 64 || Username.Length == 0)
+                { return BadRequest("Username invalid"); }
+
+                if (user.Email.Length > 64 || Email.Length == 0)
+                { return BadRequest("Email invalid"); }
+
+                if (user.Country.Length > 64 || Country.Length == 0)
+                { return BadRequest("Country invalid"); }
+
+                if (Password.Length > 64 || Password.Length < 6 || !Password.Any(char.IsUpper))
+                { return BadRequest("Password Invalid"); }
+
+                string specialChar = " !@#$£%^&*~";
+                foreach (char item in specialChar)
                 {
-                    if (Email.Length <= 64 && Email.Length != 0)
+                    if (Password.Contains(item))
                     {
-                        if (Country.Length <= 64 && Country.Length != 0)
-                        {
-                            if (Password.Length <= 64 && Password.Length >= 6 && Password.Any(char.IsUpper))
-                            {
-                                string specialChar = " !@#$£%^&*~";
-                                foreach (char item in specialChar)
-                                {
-                                    if (Password.Contains(item))
-                                    {
-                                        context.Users.Add(user);
-                                        context.SaveChanges();
-                                        Task.Run(() => SMTPEmailNotifier.SendEmailAsync(user.Email, "troy0htesting@gmail.com", "Account Confirmation", $"Test Email Confirmation\n{user.Username}"));
-                                        Response.StatusCode = 200; return "User accepted";
-                                    }
-                                }
-                                Response.StatusCode = 400; return "Password invalid";
-                            }
-                            else { Response.StatusCode = 400; return "Password invalid"; }
-                        }
-                        else
-                        { Response.StatusCode = 400; return "Country invalid"; }
+                        context.Users.Add(user);
+                        context.SaveChanges();
+                        Task.Run(() => SMTPEmailNotifier.SendEmailAsync("troy0htesting@gmail.com", Email, "Test Account Confirmation", $"Test Email Confirmation\n{user.Username}"));
+                        return Ok("User accepted");
                     }
-                    else
-                    { Response.StatusCode = 400; return "Email invalid"; }
                 }
-                else
-                { Response.StatusCode = 400; return "Username invalid"; }
+                return BadRequest("Password invalid");
             }
         }
 

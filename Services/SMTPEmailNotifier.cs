@@ -13,39 +13,19 @@ namespace JointProjectLMSAPI.Services
 {
     public class SMTPEmailNotifier : IEmailNotifier
     {
-        private string _smptServer;
-        private int _smtpPort;
-        private string _userName;
-        private string _password;
-
-        public SMTPEmailNotifier()
+        public async Task SendEmailAsync(string Sender, string Recipient, string Subject, string Body)
         {
-            _smptServer = "smtp.gmail.com";
-            _smtpPort = 587;
-            _userName = ConfigurationManager.AppSettings["Email"];
-            _password = ConfigurationManager.AppSettings["Password"];
-        }
-
-        public async Task SendEmailAsync(string Recipient, string Sender, string Subject, string Body)
-        {
-            using (SmtpClient client = new SmtpClient(_smptServer, _smtpPort))
+            SmtpClient smtpClient = new("smtp.gmail.com")
             {
-                client.UseDefaultCredentials = false;
-                client.Credentials = new NetworkCredential(_userName, _password);
+                Port = 587,
+                Credentials = new NetworkCredential(ConfigurationManager.AppSettings["Email"],
+                                                    ConfigurationManager.AppSettings["Password"]),
+                EnableSsl = true,
+            };
 
-                MailMessage mailMessage = new MailMessage();
-                mailMessage.From = new MailAddress(Sender);
-                mailMessage.To.Add(Recipient);
-                mailMessage.Body = Body;
-                mailMessage.Subject = Subject;
-                await client.SendMailAsync(mailMessage);
+            MailMessage message = new MailMessage(Sender, Recipient, Subject, Body);
 
-                await Policy
-                    .Handle<Exception>()
-                    .WaitAndRetry(3, r => TimeSpan.FromSeconds(2), (ex, ts) => { Log.Error("Error sending mail. Retrying in 2 sec."); })
-                    .Execute(() => client.SendMailAsync(mailMessage))
-                    .ContinueWith(_ => Log.Information($"Notification mail sent to {Recipient}."));
-            }
+            await smtpClient.SendMailAsync(message);
         }
     }
 }
